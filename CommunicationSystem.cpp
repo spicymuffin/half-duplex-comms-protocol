@@ -14,60 +14,13 @@ CommunicationSystem::CommunicationSystem(const char* _name, int _updateFrequency
     accessible = _accessible;
 }
 
-int CommunicationSystem::check_header_validity()
-{
-
-}
-
-void CommunicationSystem::buffer_travel_left(uint16_t dst)
-{
-
-}
-
-void CommunicationSystem::buffer_travel_right(uint16_t dst)
-{
-
-}
-
-#if COMMS_FULL_DUPLEX
-// full duplex communication protocol
-
-// // common ack format
-// // GROUND OR SKY message receival confirmation format. literally any message should be acked
-// $h<packet length in bytes (8bit)><flags (8bit)>$a<request status code (8bit)><received packet's hashsum (32bit)>$e
-
-
-// // command request formats
-// // GROUND command format. rocket needs to start execution of this command
-// $h<packet length in bytes (8bit)><flags (8bit)>$c<request id (16bit)><command (rocket module index, command index, options, args)>$e
-
-
-// // command completion format. if the command can be completed fast, we could make it so receival confirmation is skipped and completion message is sent right away
-// // SKY command execution completion format. rocket has completed the execution of the command. completion status code is sent back
-// $h<packet length in bytes (8bit)><flags (8bit)>$r<request id (16bit)><completion status code (8bit)><data segment (depends on command)>$e
-
-
-// // data transfer formats
-// // the data transfer initiator sends an init metadata message
-// // GROUND OR SKY data transfer init metadata format
-// $h<packet length in bytes (8bit)><flags (8bit)>$m<total number of packets in transfer(8bit)>$e
-// // GROUND OR SKY data transfer packet
-// $h<packet length in bytes (8bit)><flags (8bit)>$d<packet index (8bit)><packet data>$e
-// // GROUND OR SKY data transfer finalization message
-// $h<packet length in bytes (8bit)><flags (8bit)>$f$e
-// // GROUND OR SKY data transfer finalization reply
-// $h<packet length in bytes (8bit)><flags (8bit)>$i<status code (8bit, ok/abort/missing)><missing packet indices (each 8 bit)>$e
-
 bool is_valid_data_segment_identifier(char marker)
 {
     return
-        marker == MARKER_ACK ||
-        marker == MARKER_COMMAND ||
-        marker == MARKER_RESPONSE ||
-        marker == MARKER_METADATA ||
-        marker == MARKER_DATA ||
-        marker == MARKER_FINALIZATION ||
-        marker == MARKER_FINALIZATION_REPLY;
+        marker == MARKER_CONTROL_TRANSFER ||
+        marker == MARKER_ACK_ACCEPT_CONTROL_TRANSFER ||
+        marker == MARKER_ACK_DATA ||
+        marker == MARKER_COMMAND;
 }
 
 bool is_valid_any_marker(char marker)
@@ -75,13 +28,10 @@ bool is_valid_any_marker(char marker)
     return
         marker == MARKER_HEADER ||
         marker == MARKER_END ||
-        marker == MARKER_ACK ||
-        marker == MARKER_COMMAND ||
-        marker == MARKER_RESPONSE ||
-        marker == MARKER_METADATA ||
-        marker == MARKER_DATA ||
-        marker == MARKER_FINALIZATION ||
-        marker == MARKER_FINALIZATION_REPLY;
+        marker == MARKER_CONTROL_TRANSFER ||
+        marker == MARKER_ACK_ACCEPT_CONTROL_TRANSFER ||
+        marker == MARKER_ACK_DATA ||
+        marker == MARKER_COMMAND;
 }
 
 void CommunicationSystem::update()
@@ -239,14 +189,6 @@ void CommunicationSystem::update()
         }
     }
 }
-#endif
-
-#if COMMS_HALF_DUPLEX
-void CommunicationSystem::update()
-{
-    return;
-}
-#endif
 
 int CommunicationSystem::parse_data_segment()
 {
